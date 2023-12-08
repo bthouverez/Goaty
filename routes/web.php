@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\GoatController;
+use App\Http\Middleware\IsAdmin;
+use App\Models\Goat;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,34 +18,54 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Index : voir tous les goats
-Route::get('/goats', function() {
-    $goats = [
-        ['id' => 0, 'nom' => 'Boby', 'prix' => 50 ],
-        ['id' => 1, 'nom' => 'Bobo', 'prix' => 150 ],
-        ['id' => 2, 'nom' => 'Boba', 'prix' => 250 ],
-        ['id' => 3, 'nom' => 'Bobu', 'prix' => 15250 ],
-    ];
-    return view('goats.index', compact('goats'));
+Route::get('/', function () {
+    return view('welcome');
 });
 
-Route::post('/goats', function() {
-   dd('POST goat');
+
+Route::delete('/goats/{goat}', function(Goat $goat) {
+    $goat->delete();
+    return redirect('/goats');
 });
 
-Route::get('/goats/create', function() {
-    return view('goats.create');
+Route::resource('goats', GoatController::class);
+
+
+
+
+
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+])->group(function () {
+
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    Route::get('/admin', function () {
+        return view('admin.admin-panel');
+    })->name('administration')->middleware('is_admin');
+
+
+    Route::get('/cart', CartController::class);
+
 });
 
-// Show : afficher 1 seul goat
-Route::get('/goats/{id}', function($id) {
-    $goats = [
-        ['id' => 0, 'nom' => 'Boby', 'prix' => 50 ],
-        ['id' => 1, 'nom' => 'Bobo', 'prix' => 150 ],
-        ['id' => 2, 'nom' => 'Boba', 'prix' => 250 ],
-        ['id' => 3, 'nom' => 'Bobu', 'prix' => 15250 ],
-    ];
-    $goat = $goats[$id];
-    return view('goats.show', compact('goat'));
+
+
+route::get('test', function() {
+//    $s = User::with(['goats' => function ($query) {
+//        return $query->select(['color']);
+//    }])
+    $s = User::with('goats:color')
+    ->findOrFail(1);
+    return $s;
 });
 
+Route::get('/test-livewire', function() {
+    return view('counter-container');
+});
